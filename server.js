@@ -4,8 +4,13 @@ const dotenv = require('dotenv');
 const cors = require('cors');  // Import cors
 const userRoutes = require('./routes/userRoutes');
 const recordRoutes = require('./routes/recordRoutes');
+const s3UploadRoute = require('./routes/s3Upload');
 
 dotenv.config();
+
+console.log("AWS Access Key:", process.env.AWS_ACCESS_KEY_ID);
+console.log("AWS Secret Access Key:", process.env.AWS_SECRET_ACCESS_KEY);
+console.log("AWS Region:", process.env.AWS_REGION);
 
 const app = express();
 
@@ -27,6 +32,7 @@ app.get('/', (req, res) => {
 // User and Record routes
 app.use('/api/users', userRoutes);
 app.use('/api/records', recordRoutes);
+app.use('/api/s3', s3UploadRoute);
 
 // Start the server
 const PORT = process.env.PORT || 5001;
