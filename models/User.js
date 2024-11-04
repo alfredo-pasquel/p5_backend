@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   country: String,
-  favoriteArtists: [String],
-  favoriteGenres: [String],
+  favoriteArtists: [{ type: [String], default: [], set: v => v.map(artist => artist.toLowerCase()) }],
+  favoriteGenres: [{ type: [String], default: [], set: v => v.map(genre => genre.toLowerCase()) }],
   about: String,
   lookingFor: [String],
   savedItems: [String],
@@ -29,6 +29,15 @@ userSchema.pre('save', async function (next) {
 // Compare password method
 userSchema.methods.comparePassword = function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Helper method to safely add ObjectId to recordsListedForTrade
+userSchema.methods.addRecordToTradeList = function(recordId) {
+  if (mongoose.Types.ObjectId.isValid(recordId)) {
+    this.recordsListedForTrade.push(mongoose.Types.ObjectId(recordId));
+  } else {
+    throw new Error("Invalid record ID format");
+  }
 };
 
 module.exports = mongoose.model('User', userSchema);

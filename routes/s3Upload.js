@@ -5,9 +5,9 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { fromEnv } = require('@aws-sdk/credential-providers');
 
 // Console logs to verify environment variables
-console.log("AWS Access Key:", process.env.AWS_ACCESS_KEY_ID);
-console.log("AWS Secret Access Key:", process.env.AWS_SECRET_ACCESS_KEY);
-console.log("AWS Region:", process.env.AWS_REGION);
+// console.log("AWS Access Key:", process.env.AWS_ACCESS_KEY_ID);
+// console.log("AWS Secret Access Key:", process.env.AWS_SECRET_ACCESS_KEY);
+// console.log("AWS Region:", process.env.AWS_REGION);
 
 // Initialize S3 client
 const s3 = new S3Client({

@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Record = require('../models/Record');
 const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth'); // Authentication middleware
 
@@ -107,32 +108,45 @@ router.post('/logout', (req, res) => {
     }
 });
 
-// Get user profile by ID
-router.get('/:id', async (req, res) => {
+// Recommendation route using auth middleware
+router.get('/recommendations', auth, async (req, res) => {
     try {
-      const user = await User.findById(req.params.id);
-      if (!user) return res.status(404).json({ error: 'User not found' });
-  
-      res.json({
-        username: user.username,
-        email: user.email,
-        country: user.country,
-        about: user.about,
-        favoriteArtists: user.favoriteArtists,
-        favoriteGenres: user.favoriteGenres,
-        lookingFor: user.lookingFor,
-        savedItems: user.savedItems,
-        recentTrades: user.recentTrades,
-        recentlyViewed: user.recentlyViewed,
-        recordsListedForTrade: user.recordsListedForTrade,
-        tradeCount: user.tradeCount,
-        feedback: user.feedback,
-      });
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const favoriteGenresLower = user.favoriteGenres
+            .flat()
+            .filter(genre => typeof genre === 'string')
+            .map(genre => genre.toLowerCase());
+
+        const favoriteArtistsLower = user.favoriteArtists
+            .flat()
+            .filter(artist => typeof artist === 'string')
+            .map(artist => artist.toLowerCase());
+
+        // Fetch all records that match any genre or artist
+        const potentialRecords = await Record.find({}, 'title artist genres coverUrl albumId');
+
+        // Filter results manually for nested arrays in artist and genres
+        const recommendedRecords = potentialRecords.filter(record => {
+            // Flatten and lowercase genres and artist arrays for each record
+            const recordGenresLower = record.genres.flat().map(g => g.toLowerCase());
+            const recordArtistsLower = record.artist.flat().map(a => a.toLowerCase());
+
+            // Check if any genre or artist matches the user's preferences
+            const matchesGenre = recordGenresLower.some(genre => favoriteGenresLower.includes(genre));
+            const matchesArtist = recordArtistsLower.some(artist => favoriteArtistsLower.includes(artist));
+
+            return matchesGenre || matchesArtist;
+        });
+
+        console.log("Recommended Records with spotifyLink:", recommendedRecords);
+        res.json(recommendedRecords);
     } catch (error) {
-      console.error("Error fetching user profile:", error);
-      res.status(500).json({ error: 'Error fetching user profile' });
+        console.error("Error fetching recommendations:", error);
+        res.status(500).json({ error: 'Failed to fetch recommendations' });
     }
-  });
+});
 
 // Get user profile by ID and populate listed records
 router.get('/:id', auth, async (req, res) => {
@@ -160,4 +174,5 @@ try {
     res.status(500).json({ error: 'Error fetching user profile' });
 }
 });
+  
   module.exports = router;
