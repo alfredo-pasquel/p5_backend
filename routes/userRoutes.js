@@ -47,7 +47,6 @@ router.post('/register', async (req, res) => {
     }
 });
 
-
 // User login route with full response data
 router.post('/login', async (req, res) => {
     try {
@@ -108,6 +107,101 @@ router.post('/logout', (req, res) => {
     }
 });
 
+// Save a record
+router.post('/save', auth, async (req, res) => {
+    const { recordId } = req.body;
+    try {
+      const user = await User.findByIdAndUpdate(
+        req.user.userId,
+        { $addToSet: { savedItems: recordId } },
+        { new: true }
+      );
+      res.status(200).json({ message: 'Record saved', savedItems: user.savedItems });
+    } catch (error) {
+      console.error('Error saving record:', error);
+      res.status(500).json({ error: 'Failed to save record' });
+    }
+  });
+  
+  // Unsave a record
+  router.post('/unsave', auth, async (req, res) => {
+    const { recordId } = req.body;
+    try {
+      const user = await User.findByIdAndUpdate(
+        req.user.userId,
+        { $pull: { savedItems: recordId } },
+        { new: true }
+      );
+      res.status(200).json({ message: 'Record unsaved', savedItems: user.savedItems });
+    } catch (error) {
+      console.error('Error unsaving record:', error);
+      res.status(500).json({ error: 'Failed to unsave record' });
+    }
+  });
+  
+  // Add to "Looking For" list
+  router.post('/add-looking-for', auth, async (req, res) => {
+    const { albumId } = req.body;
+    try {
+      const user = await User.findByIdAndUpdate(
+        req.user.userId,
+        { $addToSet: { lookingFor: albumId } },
+        { new: true }
+      );
+      res.status(200).json({ message: 'Album added to Looking For list', lookingFor: user.lookingFor });
+    } catch (error) {
+      console.error('Error adding to Looking For:', error);
+      res.status(500).json({ error: 'Failed to add to Looking For list' });
+    }
+  });
+
+  // Remove from "Looking For" list
+router.post('/remove-looking-for', auth, async (req, res) => {
+    const { albumId } = req.body;
+    try {
+      const user = await User.findByIdAndUpdate(
+        req.user.userId,
+        { $pull: { lookingFor: albumId } },
+        { new: true }
+      );
+      res.status(200).json({ message: 'Album removed from Looking For list', lookingFor: user.lookingFor });
+    } catch (error) {
+      console.error('Error removing from Looking For:', error);
+      res.status(500).json({ error: 'Failed to remove from Looking For list' });
+    }
+  });
+  
+  // Update user profile
+  router.put('/:id', auth, async (req, res) => {
+    try {
+      if (req.user.userId !== req.params.id) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+  
+      const updates = req.body;
+      const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
+  
+      res.status(200).json(user);
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      res.status(500).json({ error: 'Failed to update profile' });
+    }
+  });
+  
+  // Get user notifications
+  router.get('/:id/notifications', auth, async (req, res) => {
+    try {
+      if (req.user.userId !== req.params.id) {
+        return res.status(403).json({ error: 'Unauthorized' });
+      }
+      const user = await User.findById(req.params.id);
+      res.status(200).json({ notifications: user.notifications });
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+  });
+
 // Recommendation route using auth middleware
 router.get('/recommendations', auth, async (req, res) => {
     try {
@@ -148,31 +242,31 @@ router.get('/recommendations', auth, async (req, res) => {
     }
 });
 
-// Get user profile by ID and populate listed records
+// Get user profile by ID
 router.get('/:id', auth, async (req, res) => {
-try {
-    const user = await User.findById(req.params.id).populate('recordsListedForTrade'); // Populate records
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    res.json({
-    username: user.username,
-    email: user.email,
-    country: user.country,
-    about: user.about,
-    favoriteArtists: user.favoriteArtists,
-    favoriteGenres: user.favoriteGenres,
-    lookingFor: user.lookingFor,
-    savedItems: user.savedItems,
-    recentTrades: user.recentTrades,
-    recentlyViewed: user.recentlyViewed,
-    recordsListedForTrade: user.recordsListedForTrade, // Full record details populated
-    tradeCount: user.tradeCount,
-    feedback: user.feedback,
-    });
-} catch (error) {
-    console.error("Error fetching user profile:", error);
-    res.status(500).json({ error: 'Error fetching user profile' });
-}
-});
+    try {
+      const user = await User.findById(req.params.id).populate('recordsListedForTrade');
+      if (!user) return res.status(404).json({ error: 'User not found' });
+  
+      res.json({
+        username: user.username,
+        email: user.email,
+        country: user.country,
+        about: user.about,
+        favoriteArtists: user.favoriteArtists,
+        favoriteGenres: user.favoriteGenres,
+        lookingFor: user.lookingFor,
+        savedItems: user.savedItems,
+        recentTrades: user.recentTrades,
+        recentlyViewed: user.recentlyViewed,
+        recordsListedForTrade: user.recordsListedForTrade,
+        tradeCount: user.tradeCount,
+        feedback: user.feedback,
+      });
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ error: 'Error fetching user profile' });
+    }
+  });
   
   module.exports = router;

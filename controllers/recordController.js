@@ -38,7 +38,22 @@ const createRecord = async (albumId, userId, imageUrls, description, shipping, c
     console.log("Record to be saved:", record);
 
     await record.save();
-    
+
+    // Notify users who are looking for this album
+    const usersLookingFor = await User.find({ lookingFor: record.albumId });
+    // Prepare the notification object
+    const notification = {
+        type: 'LookingForMatch',
+        message: `The album "${record.title}" you are looking for has been listed.`,
+        recordId: record._id,
+        date: new Date(),
+      };
+      // Send notifications to these users
+      usersLookingFor.forEach(async (user) => {
+        user.notifications.push(notification);
+        await user.save();
+      });
+
     return record;
   } catch (error) {
     console.error("Error creating record:", error);

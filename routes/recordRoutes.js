@@ -57,11 +57,11 @@ router.delete('/delete/:id', auth, async (req, res) => {
     }
   });
 
-// NEW GET route to fetch a record by ID and include seller information
+// Get a record by ID and include seller information
 router.get('/:id', async (req, res) => {
     try {
       const record = await Record.findById(req.params.id)
-        .populate('userId', 'username tradeCount feedback'); // Populate userId with specific fields
+        .populate('userId', 'username tradeCount feedback');
   
       if (!record) {
         return res.status(404).json({ message: 'Record not found' });

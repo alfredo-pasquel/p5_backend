@@ -1,21 +1,24 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const NotificationSchema = require ('./Notification')
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
+  spotifyId: { type: String, unique: true },
   password: { type: String, required: true },
   country: String,
   favoriteArtists: [{ type: [String], default: [], set: v => v.map(artist => artist.toLowerCase()) }],
   favoriteGenres: [{ type: [String], default: [], set: v => v.map(genre => genre.toLowerCase()) }],
   about: String,
-  lookingFor: [String],
-  savedItems: [String],
+  lookingFor: [{ type: String, default: [] }], // Store Spotify album IDs
+  savedItems: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Record', default: [] }],
   recentTrades: { type: Number, default: 0 },
   recentlyViewed: [String],
   recordsListedForTrade: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Record' }],
   tradeCount: { type: Number, default: 0 },
   feedback: [String],
+  notifications: [NotificationSchema]
 });
 
 // Hash the password before saving
