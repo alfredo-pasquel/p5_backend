@@ -18,6 +18,7 @@ const messageSchema = new mongoose.Schema({
     isCompleted: { type: Boolean, default: false },
     initiatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     confirmedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    feedbackProvided: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // New field
   },
 });
 

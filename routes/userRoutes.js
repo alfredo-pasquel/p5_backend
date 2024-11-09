@@ -268,5 +268,25 @@ router.get('/:id', auth, async (req, res) => {
       res.status(500).json({ error: 'Error fetching user profile' });
     }
   });
+
+  // Get public user information by ID
+router.get('/:id/public', async (req, res) => {
+    try {
+    const user = await User.findById(req.params.id)
+        .select('username tradeCount feedback') // Select only the fields we want to expose
+        .populate('feedback.fromUser', 'username'); // Populate the fromUser field in feedback
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    res.json({
+        username: user.username,
+        tradeCount: user.tradeCount,
+        feedback: user.feedback,
+    });
+    } catch (error) {
+    console.error("Error fetching public user info:", error);
+    res.status(500).json({ error: 'Error fetching user information' });
+    }
+});
   
   module.exports = router;
