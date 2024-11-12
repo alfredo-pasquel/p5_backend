@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const recordSchema = new mongoose.Schema({
   title: String,
   artist: [String],
-  albumId: { type: String, required: true }, // Spotify album ID
+  albumId: { type: String },
   genres: [String],
   coverUrl: String, // Spotify album cover
   releaseDate: String,

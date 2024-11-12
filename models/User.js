@@ -2,12 +2,40 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const NotificationSchema = require ('./Notification')
 const feedbackSchema = require('./Feedback');
+const validator = require('validator');
 
 const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        maxlength: 30,
+        trim: true,
+        },
+        email: {
+        type: String,
+        required: true,
+        unique: true,
+        maxlength: 50,
+        trim: true,
+        lowercase: true,
+        validate: {
+            validator: validator.isEmail,
+            message: 'Invalid email format',
+        },
+        },
+        password: {
+        type: String,
+        required: true,
+        validate: {
+            validator: function (v) {
+            return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(v);
+            },
+            message:
+            'Password must be at least 8 characters and include uppercase, lowercase, number, and special character',
+        },
+        },
   spotifyId: { type: String, unique: true },
-  password: { type: String, required: true },
   country: String,
   favoriteArtists: [{ type: [String], default: [], set: v => v.map(artist => artist.toLowerCase()) }],
   favoriteGenres: [{ type: [String], default: [], set: v => v.map(genre => genre.toLowerCase()) }],

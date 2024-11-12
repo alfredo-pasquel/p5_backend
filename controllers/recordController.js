@@ -1,62 +1,74 @@
 // controllers/recordController.js
+
 const axios = require('axios');
 const mongoose = require('mongoose');
-const Record = require('../models/Record');
+const Record = require('../models/Record'); // Ensure this import is present
 const User = require('../models/User');
-const { getSpotifyAccessToken } = require('../utils/spotifyApi');
+const { getSpotifyAccessToken } = require('../utils/spotifyAPI');
 
-const createRecord = async (albumId, userId, imageUrls, description, shipping, condition) => {
+const createRecord = async (recordData) => {
   try {
-    const token = await getSpotifyAccessToken();
-    const albumResponse = await axios.get(`https://api.spotify.com/v1/albums/${albumId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    let spotifyData = {};
 
-    const albumData = albumResponse.data;
-    const artistId = albumData.artists[0]?.id;
-    const artistResponse = await axios.get(`https://api.spotify.com/v1/artists/${artistId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    // If albumId is provided, fetch data from Spotify
+    if (recordData.albumId) {
+      const token = await getSpotifyAccessToken();
+      const albumResponse = await axios.get(`https://api.spotify.com/v1/albums/${recordData.albumId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    console.log("Received image URLs:", imageUrls);
+      const albumData = albumResponse.data;
+      const artistId = albumData.artists[0]?.id;
+      const artistResponse = await axios.get(`https://api.spotify.com/v1/artists/${artistId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    // Create a new Record instance with Spotify data and provided user data
-    const record = new Record({
-      albumId: albumData.id,
-      title: albumData.name,
-      artist: albumData.artists.map((artist) => artist.name).join(', '),
-      genres: artistResponse.data.genres,
-      coverUrl: albumData.images[0]?.url,
-      releaseDate: albumData.release_date,
-      condition: condition || 'New',  // Use provided condition or default to 'New'
-      description: description || '',  // Set description
-      shipping: shipping || 'No Shipping',  // Set shipping method
-      userId: userId,
-      images: imageUrls || []
-    });
+      spotifyData = {
+        title: albumData.name,
+        artist: albumData.artists.map((artist) => artist.name),
+        genres: artistResponse.data.genres,
+        coverUrl: albumData.images[0]?.url,
+        releaseDate: albumData.release_date,
+      };
+    }
 
-    console.log("Record to be saved:", record);
+    // Combine user-provided data with Spotify data (user data takes precedence)
+    const combinedData = {
+      ...spotifyData,
+      ...recordData,
+    };
 
+    // Ensure 'artist' is always an array
+    if (typeof combinedData.artist === 'string') {
+      combinedData.artist = combinedData.artist.split(',').map((artist) => artist.trim());
+    }
+
+    // Ensure 'genres' is always an array
+    if (typeof combinedData.genres === 'string') {
+      combinedData.genres = combinedData.genres.split(',').map((genre) => genre.trim());
+    }
+
+    const record = new Record(combinedData);
     await record.save();
 
     // Notify users who are looking for this album
-    const usersLookingFor = await User.find({ lookingFor: record.albumId });
-    // Prepare the notification object
-    const notification = {
+    if (record.albumId) {
+      const usersLookingFor = await User.find({ lookingFor: record.albumId });
+      const notification = {
         type: 'LookingForMatch',
         message: `The album "${record.title}" you are looking for has been listed.`,
         recordId: record._id,
         date: new Date(),
       };
-      // Send notifications to these users
-      usersLookingFor.forEach(async (user) => {
+      for (const user of usersLookingFor) {
         user.notifications.push(notification);
         await user.save();
-      });
+      }
+    }
 
     return record;
   } catch (error) {
-    console.error("Error creating record:", error);
+    console.error('Error creating record:', error);
     throw error;
   }
 };

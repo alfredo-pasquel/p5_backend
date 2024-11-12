@@ -19,24 +19,26 @@ router.get('/', async (req, res) => {
 
 // POST route to create a new record listing and add it to the user's profile
 router.post('/create', auth, async (req, res) => {
-  const { albumId, images, description, shipping, condition } = req.body; // Accept all required fields from frontend
-
-  try {
-    // Call createRecord to handle fetching Spotify data and saving to DB
-    const newRecord = await createRecord(albumId, req.user.userId, images, description, shipping, condition);
-
-    // Update user's recordsListedForTrade with the new record ID
-    await User.findByIdAndUpdate(
-      req.user.userId,
-      { $push: { recordsListedForTrade: newRecord._id } }
-    );
-
-    res.status(201).json(newRecord);
-  } catch (error) {
-    console.error("Error creating record listing:", error);
-    res.status(500).json({ error: 'Failed to create record listing' });
-  }
-});
+    try {
+      const recordData = {
+        ...req.body,
+        userId: req.user.userId,
+      };
+  
+      const newRecord = await createRecord(recordData);
+  
+      // Update user's recordsListedForTrade with the new record ID
+      await User.findByIdAndUpdate(
+        req.user.userId,
+        { $push: { recordsListedForTrade: newRecord._id } }
+      );
+  
+      res.status(201).json(newRecord);
+    } catch (error) {
+      console.error('Error creating record listing:', error);
+      res.status(500).json({ error: 'Failed to create record listing' });
+    }
+  });
 
 // DELETE route to delete a record listing
 router.delete('/delete/:id', auth, async (req, res) => {
