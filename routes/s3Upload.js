@@ -33,7 +33,7 @@ router.get('/generate-upload-url', async (req, res) => {
       const key = `${sanitizedAlbumId}_${Date.now()}_${sanitizedFileName}`;
   
       const params = {
-        Bucket: 'ap-p5-vinyl-bucket', // Replace with your bucket name if different
+        Bucket: 'ap-p5-vinyl-bucket',
         Key: key,
         ContentType: fileType
       };
@@ -44,7 +44,7 @@ router.get('/generate-upload-url', async (req, res) => {
       // Construct image URL to store in the database
       const imageUrl = `https://${params.Bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
   
-      console.log("Generated upload URL:", uploadUrl); // Log the generated URL
+      console.log("Generated upload URL:", uploadUrl);
       res.status(200).json({ uploadUrl, imageUrl });
     } catch (error) {
       console.error("Error generating pre-signed URL:", error);

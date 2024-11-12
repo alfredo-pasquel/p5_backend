@@ -2,7 +2,7 @@
 
 const axios = require('axios');
 const mongoose = require('mongoose');
-const Record = require('../models/Record'); // Ensure this import is present
+const Record = require('../models/Record');
 const User = require('../models/User');
 const { getSpotifyAccessToken } = require('../utils/spotifyAPI');
 

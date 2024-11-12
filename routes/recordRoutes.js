@@ -2,9 +2,9 @@
 const express = require('express');
 const router = express.Router();
 const Record = require('../models/Record');
-const User = require('../models/User'); // Import User model to update user document
-const auth = require('../middleware/auth'); // Authentication middleware
-const { createRecord } = require('../controllers/recordController'); // Import createRecord from recordController
+const User = require('../models/User');
+const auth = require('../middleware/auth');
+const { createRecord } = require('../controllers/recordController');
 
 // GET route to fetch all records for displaying on the homepage
 router.get('/', async (req, res) => {

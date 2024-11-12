@@ -5,7 +5,7 @@ const router = express.Router();
 const axios = require('axios');
 const { getSpotifyAccessToken } = require('../utils/spotifyAPI');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User'); // Adjust the path as necessary
+const User = require('../models/User'); 
 
 // Route to search albums
 router.get('/search', async (req, res) => {
@@ -94,7 +94,6 @@ router.post('/callback', async (req, res) => {
           email: spotifyUserData.email,
           spotifyAccessToken: accessToken,
           spotifyRefreshToken: refreshToken,
-          // Add any other fields you need
         });
   
         await user.save();
