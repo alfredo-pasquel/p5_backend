@@ -257,43 +257,43 @@ router.get('/:id/notifications', auth, async (req, res) => {
 
 // Recommendation route using auth middleware
 router.get('/recommendations', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    const favoriteGenresLower = user.favoriteGenres
-      .flat()
-      .filter((genre) => typeof genre === 'string')
-      .map((genre) => genre.toLowerCase());
-
-    const favoriteArtistsLower = user.favoriteArtists
-      .flat()
-      .filter((artist) => typeof artist === 'string')
-      .map((artist) => artist.toLowerCase());
-
-    // Fetch all records that match any genre or artist
-    const potentialRecords = await Record.find({}, 'title artist genres coverUrl albumId');
-
-    // Filter results manually for nested arrays in artist and genres
-    const recommendedRecords = potentialRecords.filter((record) => {
-      // Flatten and lowercase genres and artist arrays for each record
-      const recordGenresLower = record.genres.flat().map((g) => g.toLowerCase());
-      const recordArtistsLower = record.artist.flat().map((a) => a.toLowerCase());
-
-      // Check if any genre or artist matches the user's preferences
-      const matchesGenre = recordGenresLower.some((genre) => favoriteGenresLower.includes(genre));
-      const matchesArtist = recordArtistsLower.some((artist) => favoriteArtistsLower.includes(artist));
-
-      return matchesGenre || matchesArtist;
-    });
-
-    console.log('Recommended Records with spotifyLink:', recommendedRecords);
-    res.json(recommendedRecords);
-  } catch (error) {
-    console.error('Error fetching recommendations:', error);
-    res.status(500).json({ error: 'Failed to fetch recommendations' });
-  }
-});
+    try {
+      const user = await User.findById(req.user.userId);
+      if (!user) return res.status(404).json({ error: 'User not found' });
+  
+      const favoriteGenresLower = user.favoriteGenres
+        .flat()
+        .filter((genre) => typeof genre === 'string')
+        .map((genre) => genre.toLowerCase());
+  
+      const favoriteArtistsLower = user.favoriteArtists
+        .flat()
+        .filter((artist) => typeof artist === 'string')
+        .map((artist) => artist.toLowerCase());
+  
+      // Fetch all records that match any genre or artist, including images
+      const potentialRecords = await Record.find({}, 'title artist genres coverUrl albumId images');
+  
+      // Filter results manually for nested arrays in artist and genres
+      const recommendedRecords = potentialRecords.filter((record) => {
+        // Flatten and lowercase genres and artist arrays for each record
+        const recordGenresLower = record.genres.flat().map((g) => g.toLowerCase());
+        const recordArtistsLower = record.artist.flat().map((a) => a.toLowerCase());
+  
+        // Check if any genre or artist matches the user's preferences
+        const matchesGenre = recordGenresLower.some((genre) => favoriteGenresLower.includes(genre));
+        const matchesArtist = recordArtistsLower.some((artist) => favoriteArtistsLower.includes(artist));
+  
+        return matchesGenre || matchesArtist;
+      });
+  
+      console.log('Recommended Records with images:', recommendedRecords);
+      res.json(recommendedRecords);
+    } catch (error) {
+      console.error('Error fetching recommendations:', error);
+      res.status(500).json({ error: 'Failed to fetch recommendations' });
+    }
+  });  
 
 // Get user profile by ID
 router.get('/:id', auth, async (req, res) => {
